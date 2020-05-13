@@ -1,0 +1,245 @@
+.model small
+.stack 100h
+.data
+
+inputBuffer db 5, 8 dup ('$')
+outputBuffer db 5, 8 dup ('$')
+
+first dw 0000h
+second dw 0000h
+
+enterFirstNumMsg db "Enter first number: ", 0dh, 0ah, '$'
+enterSecondNumMsg db 0dh, 0ah, "Enter second number: ", 0dh, 0ah, '$'
+andResMsg db 0dh, 0ah, "And result: ", 0dh, 0ah, '$'
+orResMsg db 0dh, 0ah, "Or result: ", 0dh, 0ah, '$'
+xorResMsg db 0dh, 0ah, "Xor result: ", 0dh, 0ah, '$'
+notFirstResMsg db 0dh, 0ah, "Not result (first number): ", 0dh, 0ah, '$'
+notSecondResMsg db 0dh, 0ah, "Not result (second number): ", 0dh, 0ah, '$'
+
+ErrorMsg db "Error: not a number!$", 0dh, 0ah, '$'
+
+.code
+start:
+    lea dx, enterFirstNumMsg             ; message to enter first number
+    call puts
+
+    lea dx, inputBuffer                  ; input
+    call gets
+
+    lea si, inputBuffer                  ; transform hex string to word
+    call hexToWord
+
+    mov first, dx                        ; store into the variable
+
+    lea dx, enterSecondNumMsg            ; message to enter second number
+    call puts
+
+    lea dx, inputBuffer                  ; input
+    call gets
+
+    lea si, inputBuffer                  ; transform hex string to word
+    call hexToWord
+
+    mov second, dx                       ; store into the variable
+
+    mov dx, first                        ; AND operatoin
+    mov ax, second
+
+    and ax, dx
+
+    lea dx, andResMsg                    ; output meassage of result
+    call puts
+
+    lea si, outputBuffer                 ; transform result into hex string
+    call wordToHex
+
+    lea dx, outputBuffer                 ; output result
+    call puts
+
+
+    mov dx, first                        ; OR operation
+    mov ax, second
+
+    or ax, dx
+
+    lea dx, orResMsg
+    call puts
+
+    lea si, outputBuffer
+    call wordToHex
+
+    lea dx, outputBuffer
+    call puts
+
+
+    mov dx, first                        ; XOR operarion
+    mov ax, second
+
+    xor ax, dx
+
+    lea dx, xorResMsg
+    call puts
+
+    lea si, outputBuffer
+    call wordToHex
+
+    lea dx, outputBuffer
+    call puts
+
+                                         ; NOT operation for the first number
+    mov ax, first
+    not ax
+
+    lea dx, notFirstResMsg
+    call puts
+
+    lea si, outputBuffer
+    call wordToHex
+
+    lea dx, outputBuffer
+    call puts
+
+
+    mov ax, second                       ; NOT operation for the second number
+    not ax
+
+    lea dx, notSecondResMsg
+    call puts
+
+    lea si, outputBuffer
+    call wordToHex
+
+    lea dx, outputBuffer
+    call puts
+
+end:
+    int 20h                              ; end program
+
+hexToWord proc
+    push ax
+    push bx
+    push cx
+
+    xor cx, cx
+    mov cl, [si] + 1                     ; move string length to cx
+
+    xor dx, dx
+
+    add si, 2                            ; skip first 2 bytes
+
+hexToWordLoop:
+    shl dx, 4                            ; move bits in dx to left every iterarion
+
+    xor ax, ax
+
+    lodsb                                ; load next symbol from string to al
+
+    cmp al, '0'                          ; if symbol < '0' - error
+    jl error
+
+    cmp al, '9'                          ; if symbol > '9' it can be a letter
+    jg letterCheck
+
+    sub al, '0'                          ; get number
+    jmp skipLetterCheck
+
+letterCheck:
+    and al, 11011111b                    ; transform to uppercase
+
+    cmp al, 'A'                          ; if symbol < 'A' - error
+    jl error
+
+    cmp al, 'F'                          ; if symbol > 'F' - error
+    jg error
+
+    sub al,'A'-10                        ; get number
+
+skipLetterCheck:
+     or dx, ax                           ; push into dx
+
+loop hexToWordLoop
+
+    pop cx
+    pop bx
+    pop ax
+    ret
+hexToWord endp
+
+
+wordToHex proc
+    push ax
+    push bx
+    push cx
+    push dx
+
+    mov dx, ax
+
+    rol dl, 4                            ; use rol to swap big and small nibbles
+    shr dl, 4                            ; move bits to get nibble
+    call nibbleToChar
+    mov [si]+3, dl                       ; write into buffer
+
+    mov dx, ax
+
+    shr dl, 4                            ; move bits to get the nibble
+    call nibbleToChar
+    mov [si]+2, dl
+
+    mov dx, ax
+    mov dl, dh
+
+    rol dl, 4
+    shr dl, 4
+    call nibbleToChar
+    mov [si]+1, dl
+
+    mov dx, ax
+    mov dl, dh
+
+    shr dl, 4
+    call nibbleToChar
+    mov [si], dl
+
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+
+    ret
+wordToHex endp
+
+nibbleToChar proc
+
+    cmp dl, 9                            ; if nibble is smaller than 10 it is number else - letter
+    jle nibbleNumber                     ; convert into number
+    add dl, 'A'-10                       ; convert into letter
+    jmp nibbleToCharEnd
+
+nibbleNumber:
+    add dl, '0'
+
+nibbleToCharEnd:
+    ret
+nibbleToChar endp
+
+gets proc
+    push ax
+    mov ah, 0Ah
+    int 21h
+    pop ax
+    ret
+gets endp
+
+puts proc
+    push ax
+    mov ah, 09h
+    int 21h
+    pop ax
+    ret
+puts endp
+
+
+error:
+    lea dx, ErrorMsg
+    call puts
+    int 20h
