@@ -22,7 +22,7 @@
     string_xor db 'XOR=$' 
     string_not db 'NOT=$'
 .code
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;vvod
+                                                                    ;vvod
 input proc
 st_new:    
     mov ah,0ah    ;schitivaem stroku
@@ -43,7 +43,7 @@ st_new:
     je st_new
     ret
 input endp 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;atoi
+                                                        ;atoi
 atoi proc
                   ;bx=16,dx-cifra,ax-result,
                   ;di - ukazivaet na nachalo stroki
@@ -149,7 +149,7 @@ return:
     pop bx
     ret   
 atoi endp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;cifra check
+                                            ;number check
 cifra proc
                 
     cmp dl,30h  
@@ -169,7 +169,7 @@ ne_cifra_:
     mov cx,1        
     ret                                   
 cifra endp 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;to string
+                                                    ;to string
 to_string proc ;v ax nashe chislo
     xor cx,cx
     mov bx,10h
@@ -203,7 +203,7 @@ no_more_9:
       
     ret
 to_string endp  
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;and
+                                                    ;and
 and_proc proc
     xor ax,ax
     xor bx,bx
@@ -217,7 +217,7 @@ and_proc proc
        
     ret
 and_proc endp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;or
+                                                    ;or
 or_proc proc
     xor ax,ax
     xor bx,bx
@@ -231,7 +231,7 @@ or_proc proc
         
     ret
 or_proc endp 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;xor
+                                                    ;xor
 xor_proc proc
     xor ax,ax
     xor bx,bx
@@ -245,35 +245,35 @@ xor_proc proc
     
     ret
 xor_proc endp    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;not
+                                                    ;not
 not_proc proc    
     not ax    
     ret
 not_proc endp
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;output
+                                                    ;output
 output macro str
     mov ah,9 
     mov dx,offset str
     int 21h
     xor ax,ax
 endm   
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;start
+                                                   ;start
 start:
     mov ax,@data
     mov ds,ax    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    
+   
     output string    
     lea bx,first_number
     call input
     mov first_num,ax        
     output string_n    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     output string        
     lea bx,second_number
     call input
     mov second_num,ax
     output string_n      
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+       
 call and_proc
     mov ax,and_num
     push ax
@@ -283,7 +283,7 @@ call and_proc
     call to_string
     pop ax
     output string_n 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 call or_proc
     mov ax,or_num
     push ax
@@ -293,7 +293,7 @@ call or_proc
     call to_string 
     pop ax
     output string_n 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 call xor_proc 
     mov ax,xor_num
     push ax
@@ -303,7 +303,7 @@ call xor_proc
     call to_string
     pop ax
     output string_n
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     output string_not
     mov ax,first_num
     call not_proc
@@ -319,7 +319,7 @@ call xor_proc
     call to_string
     pop ax
     output string_n 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 to_end:    
     mov ah,4ch
     int 21h   
