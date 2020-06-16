@@ -1,28 +1,166 @@
 .model small
 .stack 100h
-.data
-    first_number db 7,0,7 dup('$') 
-    second_number db 7,0,7 dup('$')
-    
-    first_num dw 0
-    second_num dw 0 
-    
-    and_num dw 0
-    or_num dw 0
-    xor_num dw 0
-    
-    string db 'Enter number:',0dh,0ah,'$' 
-    string_of db 'Overflow',0dh,0ah,'$'
-    string_new db 'Please enter new',0dh,0ah,'$' 
-    string_ne_cifra db 'V stroke sodersh ne cifra',0dh,0ah,'$'    
-    string_n db 0dh,0ah,'$'
+.data 
+                
+outputBuffer db 5,0 5 dup ('$')
+first_number db 7,0,7 dup('$') 
+second_number db 7,0,7 dup('$')   
 
-    string_and db 'AND=$'
-    string_or db 'OR=$'
-    string_xor db 'XOR=$' 
-    string_not db 'NOT=$'
+first_num dw 0
+second_num dw 0    
+and_num dw 0
+or_num dw 0
+xor_num dw 0 
+
+flagNeg db 0
+              
+string_n db 0dh, 0ah, '$' 
+string_ov db 0dh, 0ah, 'Overflow',0dh,0ah,'$'
+string_new db 'Please enter again number: ','$'                                  
+enterFirstNumMsg db "Enter first number: ", '$'
+firstNumMsg db 0dh, 0ah, "First number: ", 0dh, 0ah, '$'
+secondNumMsg db 0dh, 0ah, "Second number: ", 0dh, 0ah, '$'
+enterSecondNumMsg db 0dh, 0ah, "Enter second number: ", '$'
+
+andResMsg db 0dh, 0ah, "And result: ", '$'
+orResMsg db 0dh, 0ah, "Or result: ",  '$'
+xorResMsg db 0dh, 0ah, "Xor result: ", '$'
+
+notFirstResMsg db 0dh, 0ah, "Not result (first number): $"
+shlFirstResMsg db 0dh, 0ah, "SHL result (first number): $"
+shrFirstResMsg db 0dh, 0ah, "SHR result (first number): $"
+rolFirstResMsg db 0dh, 0ah, "ROl result (first number): $"
+
+notSecondResMsg db 0dh, 0ah, "Not result (second number): $"
+shlSecondResMsg db 0dh, 0ah, "SHL result (second number): $"
+shrSecondResMsg db 0dh, 0ah, "SHR result (second number): $"
+rolSecondResMsg db 0dh, 0ah, "ROL result (second number): $"
+
+ErrorMsg db 0dh, 0ah, "Error: not a number!$", 0dh, 0ah, '$'                             
+
 .code
-                                                                    ;vvod
+
+output macro str
+    mov ah,9 
+    mov dx,offset str
+    int 21h
+    xor ax,ax
+endm 
+ 
+start: 
+    mov ax,@data
+    mov ds,ax  
+    
+    output enterFirstNumMsg    
+    lea bx,first_number
+    call input
+    mov first_num,ax        
+    output string_n  
+    
+    output enterSecondNumMsg        
+    lea bx,second_number
+    call input
+    mov second_num,ax
+    output string_n 
+;//////////////////////////////////////////////////////////    
+    call and_proc
+    mov ax,and_num
+    push ax
+    output andResMsg
+    pop ax
+    push ax
+    call to_string
+    pop ax
+    output string_n 
+
+    call or_proc
+    mov ax,or_num
+    push ax
+    output orResMsg
+    pop ax  
+    push ax
+    call to_string 
+    pop ax
+    output string_n 
+
+    call xor_proc 
+    mov ax,xor_num
+    push ax
+    output xorResMsg
+    pop ax       
+    push ax
+    call to_string
+    pop ax
+    output string_n
+                         ;First number: not, shl, shr, rol 
+    output notFirstResMsg
+    mov ax,first_num
+    call not_proc
+    push ax
+    call to_string
+    pop ax
+    output string_n
+    
+    output shlFirstResMsg
+    mov ax, first_num
+    shl ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts 
+    
+    output shrFirstResMsg
+    mov ax, first_num
+    shr ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts
+    
+    output rolFirstResMsg
+    mov ax, first_num
+    rol ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts
+                         ;Second number: not, shl, shr, rol 
+    output string_n
+    output notSecondResMsg
+    mov ax,second_num
+    call not_proc
+    push ax
+    call to_string
+    pop ax
+    output string_n
+    
+    output shlSecondResMsg
+    mov ax, second_num
+    shl ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts 
+    
+    output shrSecondResMsg
+    mov ax, second_num
+    shr ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts
+    
+    output rolSecondResMsg
+    mov ax, second_num
+    rol ax, 4
+    lea si, outputBuffer
+    call wordToHex
+    lea dx, outputBuffer
+    call puts
+    
+end:   
+int 20h
+;/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 input proc
 st_new:    
     mov ah,0ah    ;schitivaem stroku
@@ -43,7 +181,7 @@ st_new:
     je st_new
     ret
 input endp 
-                                                        ;atoi
+
 atoi proc
                   ;bx=16,dx-cifra,ax-result,
                   ;di - ukazivaet na nachalo stroki
@@ -129,15 +267,16 @@ ne_cifra_end:
     pop cx
     mov cx,3   
     pop bx
+    output ErrorMsg
     output string_n
-    output string_ne_cifra
+    output string_new
     ret
 pere: 
     pop cx
     mov cx,3
     pop bx
-    output string_n
-    output string_of 
+    ;output string_n
+    output string_ov 
     output string_new
     ret   
 gotovo:
@@ -149,7 +288,7 @@ return:
     pop bx
     ret   
 atoi endp
-                                            ;number check
+
 cifra proc
                 
     cmp dl,30h  
@@ -169,7 +308,7 @@ ne_cifra_:
     mov cx,1        
     ret                                   
 cifra endp 
-                                                    ;to string
+
 to_string proc ;v ax nashe chislo
     xor cx,cx
     mov bx,10h
@@ -202,8 +341,8 @@ no_more_9:
     loop loop_output:
       
     ret
-to_string endp  
-                                                    ;and
+to_string endp 
+
 and_proc proc
     xor ax,ax
     xor bx,bx
@@ -217,7 +356,7 @@ and_proc proc
        
     ret
 and_proc endp
-                                                    ;or
+
 or_proc proc
     xor ax,ax
     xor bx,bx
@@ -231,7 +370,7 @@ or_proc proc
         
     ret
 or_proc endp 
-                                                    ;xor
+
 xor_proc proc
     xor ax,ax
     xor bx,bx
@@ -244,83 +383,83 @@ xor_proc proc
     mov xor_num,ax
     
     ret
-xor_proc endp    
-                                                    ;not
+xor_proc endp
+ 
 not_proc proc    
     not ax    
     ret
-not_proc endp
-                                                    ;output
-output macro str
-    mov ah,9 
-    mov dx,offset str
-    int 21h
-    xor ax,ax
-endm   
-                                                   ;start
-start:
-    mov ax,@data
-    mov ds,ax    
-   
-    output string    
-    lea bx,first_number
-    call input
-    mov first_num,ax        
-    output string_n    
+not_proc endp  
 
-    output string        
-    lea bx,second_number
-    call input
-    mov second_num,ax
-    output string_n      
-       
-call and_proc
-    mov ax,and_num
-    push ax
-    output string_and
-    pop ax
-    push ax
-    call to_string
-    pop ax
-    output string_n 
+shr_proc proc    
+    shr ax, 1    
+    ret
+shr_proc endp
 
-call or_proc
-    mov ax,or_num
-    push ax
-    output string_or
-    pop ax  
-    push ax
-    call to_string 
-    pop ax
-    output string_n 
+rol_proc proc    
+    rol ax, 1    
+    ret
+rol_proc endp 
 
-call xor_proc 
-    mov ax,xor_num
+wordToHex proc
     push ax
-    output string_xor
-    pop ax       
-    push ax
-    call to_string
-    pop ax
-    output string_n
-
-    output string_not
-    mov ax,first_num
-    call not_proc
-    push ax
-    call to_string
-    pop ax
-    output string_n  
+    push bx
+    push cx
+    push dx
     
-    output string_not
-    mov ax,second_num  
-    call not_proc
-    push ax
-    call to_string
+    mov dx, ax
+    
+    rol dl, 4                            ; use rol to swap big and small nibbles
+    shr dl, 4                            ; move bits to get nibble   
+    call nibbleToChar
+    mov [si]+3, dl                       ; write into buffer
+    
+    mov dx, ax
+    
+    shr dl, 4                            ; move bits to get the nibble
+    call nibbleToChar
+    mov [si]+2, dl    
+    
+    mov dx, ax 
+    mov dl, dh
+    
+    rol dl, 4
+    shr dl, 4
+    call nibbleToChar
+    mov [si]+1, dl      
+    
+    mov dx, ax
+    mov dl, dh
+    
+    shr dl, 4
+    call nibbleToChar
+    mov [si], dl
+    
+    pop dx
+    pop cx
+    pop bx 
     pop ax
-    output string_n 
+      
+    ret 
+wordToHex endp    
+ 
+nibbleToChar proc
+           
+    cmp dl, 9                            ; if nibble is smaller than 10 it is number else - letter
+    jle nibbleNumber                     ; convert into number
+    add dl, 'A'-10                       ; convert into letter
+    jmp nibbleToCharEnd
+     
+nibbleNumber:
+    add dl, '0'          
+    
+nibbleToCharEnd:    
+    ret
+nibbleToChar endp 
 
-to_end:    
-    mov ah,4ch
-    int 21h   
-end start
+puts proc    
+    push ax        
+    mov ah, 09h
+    int 21h  
+    pop ax
+    ret              
+puts endp
